@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.javaclimb.music.dao.SongMapper">
+
+  <!-- resultMap就是返回值类型，后面查询的时候方便用 -->
+<!--  整个Song对象的属性集，在xml中返回值就叫做BaseResultMap"  每一个property实际上是调用domain的set方法-->
+  <resultMap id="BaseResultMap" type="com.javaclimb.music.domain.Song">
+    <id column="id" jdbcType="INTEGER" property="id"/>
+    <result column="singer_id" jdbcType="INTEGER" property="singerId" />
+    <result column="name" jdbcType="VARCHAR" property="name"/>
+    <result column="introduction" jdbcType="VARCHAR" property="introduction"/>
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    <result column="pic" jdbcType="VARCHAR" property="pic"/>
+    <result column="lyric" jdbcType="LONGVARCHAR" property="lyric"/>
+    <result column="url" jdbcType="VARCHAR" property="url"/>
+  </resultMap>
+
+<!--  extends表示上面有的 下面也有-->
+  <resultMap id="ResultMapWithBLOBs" type="com.javaclimb.music.domain.Song" extends="BaseResultMap">
+    <result column="lyric" jdbcType="LONGVARCHAR" property="lyric"/>
+  </resultMap>
+
+<!--  所有列 方便下面用 是个sql语句-->
+  <sql id="Base_Column_List">
+    id,singer_id,name,introduction,create_time,update_time,pic,url
+  </sql>
+
+  <sql id="Blob_Column_List">
+    id,singer_id,name,introduction,create_time,update_time,pic,lyric,url
+  </sql>
+
+<!--  public int insert(Song song)-->
+    <insert id="insert" parameterType="com.javaclimb.music.domain.Song">
+      insert into song
+<!--通用sql语句    前面加（ 后面加） suffix后面去掉逗号-->
+      <trim prefix="(" suffix=")" suffixOverrides=",">
+         <!--id不为空就会有id-->
+        <if test="id != null">
+          id,
+        </if>
+        <if test="singerId != null">
+          singer_id,
+        </if>
+        <if test="name != null">
+          name,
+        </if>
+        <if test="introduction != null">
+          introduction,
+        </if>
+        <!--当前时间-->
+        create_time,update_time,
+        <if test="pic != null">
+          pic,
+        </if>
+        <if test="lyric != null">
+          lyric,
+        </if>
+        <if test="url != null" >
+          url,
+        </if>
+      </trim>
+
+      <trim prefix=" value(" suffix=")" suffixOverrides=",">
+        <if test="id != null">
+          #{id},
+        </if>
+        <if test="singerId != null">
+        <!-- 注意是#{singerId} 相当于以前的占位符，可以看做是几个java的变量  -->
+          #{singerId},
+        </if>
+        <if test="name != null">
+          #{name},
+        </if>
+        <if test="introduction != null">
+          #{introduction},
+        </if>
+        <!--当前时间-->
+        now(),now(),
+        <if test="pic != null">
+          #{pic},
+        </if>
+        <if test="lyric != null">
+          #{lyric},
+        </if>
+        <if test="url != null" >
+          #{url},
+        </if>
+      </trim>
+    </insert>
+
+<!--  public int update(Song song);-->
+  <update id="update" parameterType="com.javaclimb.music.domain.Song">
+    update song
+<!--     借用mybatis的set-->
+    <set>
+      <if test="singerId != null">
+        singerId = #{singerId},
+      </if>
+      <if test="name != null">
+        name = #{name},
+      </if>
+      <if test="introduction != null">
+        introduction = #{introduction},
+      </if>
+      update_time = now(),
+      <if test="pic != null">
+        pic = #{pic},
+      </if>
+      <if test="lyric != null" >
+        lyric = #{lyric},
+      </if>
+      <if test="url != null">
+        url = #{url},
+      </if>
+    </set>
+    where id = #{id}
+  </update>
+
+
+<!--  public int delete(Integer id);-->
+  <delete id="delete" parameterType="java.lang.Integer">
+    delete from song
+    where id = #{id}
+  </delete>
+
+  <!-- public String getUrlById(Integer id) -->
+  <select id="getUrlById" parameterType="java.lang.Integer" resultType="java.lang.String">
+    select url from song where id = #{id}
+  </select>
+
+<!--  public Song selectByPrimaryKey(Integer id);-->
+<!--  返回值是BaseResultMap-->
+  <select id="selectByPrimaryKey" resultMap="ResultMapWithBLOBs" parameterType="java.lang.Integer">
+    select
+    <include refid="Blob_Column_List" />
+    from song
+    where id =#{id}
+  </select>
+
+<!--  public List<Song> allSong()-->
+  <select id="allSong" resultMap="ResultMapWithBLOBs">
+    select
+    <include refid="Blob_Column_List" />
+    from song
+  </select>
+
+<!--  查询的字符串交给前端-->
+<!--  public List<Song> songOfName(String name)-->
+  <select id="songOfName" resultMap="ResultMapWithBLOBs" parameterType="java.lang.String">
+    select
+    <include refid="Blob_Column_List" />
+    from song
+    where name = #{name}
+  </select>
+
+<!--  public List<Song> songOfSingerId(Integer id);;-->
+  <select id="songOfSingerId" resultMap="ResultMapWithBLOBs" parameterType="java.lang.Integer">
+    select
+    <include refid="Blob_Column_List" />
+    from song
+    where singer_id = #{singerId}
+  </select>
+
+</mapper>
